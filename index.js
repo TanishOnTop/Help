@@ -9,8 +9,9 @@ const AutoAuth = require("mineflayer-auto-auth");
 function createBot() {
   const bot = mineflayer.createBot({
     host: "play.potionmc.xyz",
-    port: 25565,
+    version: false,
     username: "fireball_022",
+    port: 25565,
     plugins: [AutoAuth],
     AutoAuth: {
       password: "Yourgifttanish", // Set the password here
@@ -28,10 +29,11 @@ function createBot() {
     botReady = true;
 
     setTimeout(() => {
+      // Interact with the compass after spawning
       const compass = bot.inventory.items().find((item) => item.name.includes("compass"));
       if (compass) {
         console.log("Compass found! Opening it...");
-        bot.activateItem();
+        bot.activateItem(); // Simulates right-clicking the compass to open the GUI
       } else {
         console.log("Compass not found in inventory.");
       }
@@ -40,40 +42,73 @@ function createBot() {
 
   bot.on("windowOpen", (window) => {
     console.log("GUI opened!");
+
+    // Check all slots in the GUI
     window.slots.forEach((item, index) => {
       if (item) {
         console.log(`Slot ${index}: ${item.displayName}`);
       }
     });
 
+    // Find the slot with "Lifesteal Realm"
     const lifestealSlot = window.slots.findIndex(
       (item) => item && item.displayName.includes("Purple Dye")
     );
     if (lifestealSlot !== -1) {
       console.log(`Lifesteal Realm found in slot ${lifestealSlot}`);
-      bot.clickWindow(lifestealSlot, 0, 0);
+      bot.clickWindow(lifestealSlot, 0, 0); // Click on the "Lifesteal Realm" slot
     } else {
       console.log("Lifesteal Realm not found in any slot!");
     }
   });
 
-  setInterval(() => {
-    bot.swingArm("right");
-    console.log("Swinging the sword...");
-  }, 1000); // Swing the sword every second
+  bot.on("windowClose", () => {
+    console.log("Window closed. Equipping sword...");
+
+    equipSword(); // Try equipping the sword immediately
+
+    // Set interval to retry equipping the sword every 1 minute if not found
+    setInterval(() => {
+      equipSword();
+    }, 60000); // 60 seconds
+  });
+
+  function equipSword() {
+    const sword = bot.inventory.items().find((item) => item.name.includes("sword"));
+    if (sword) {
+      bot.equip(sword, "hand").then(() => {
+        console.log("Sword equipped in main hand!");
+
+        // Start attacking nearby mobs
+        attackMobs();
+      }).catch((err) => {
+        console.log("Failed to equip sword: ", err);
+      });
+    } else {
+      console.log("No sword found in inventory. Will retry in 1 minute.");
+    }
+  }
+
+  function attackMobs() {
+    const mob = bot.nearestEntity((entity) => entity.type === "mob");
+
+    if (mob) {
+      console.log(`Attacking mob: ${mob.name}`);
+      bot.pvp.attack(mob);
+    } else {
+      console.log("No mobs nearby.");
+    }
+
+    // Re-check for mobs every 2 seconds
+    setTimeout(attackMobs, 2000);
+  }
 
   bot.on("chat", (username, message) => {
     console.log(`[${username}] ${message}`);
   });
 
-  bot.on("kicked", (reason) => {
-    console.log("Bot was kicked: ", reason);
-  });
-
-  bot.on("error", (err) => {
-    console.error("Bot encountered an error: ", err);
-  });
-
+  bot.on("kicked", console.log);
+  bot.on("error", console.log);
   bot.on("end", () => {
     console.log("Bot disconnected. Restarting...");
     createBot(); // Restart the bot if it disconnects
@@ -86,6 +121,7 @@ function createBot() {
 
   rl.on("line", (input) => {
     if (input.trim()) {
+      console.log(`Attempting to send message: ${input}`);
       if (botReady) {
         try {
           bot.chat(input);
