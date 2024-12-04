@@ -113,5 +113,3 @@ function createBot() {
 
 // Start the bot
 createBot();
-
-// hihi
