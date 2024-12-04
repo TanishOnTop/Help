@@ -9,12 +9,11 @@ const AutoAuth = require("mineflayer-auto-auth");
 function createBot() {
   const bot = mineflayer.createBot({
     host: "play.potionmc.xyz",
-    version: false,
-    username: "DgytonTop",
     port: 25565,
+    username: "fireball_022",
     plugins: [AutoAuth],
     AutoAuth: {
-      password: "553532", // Set the password here
+      password: "Yourgifttanish", // Set the password here
     },
   });
 
@@ -29,11 +28,10 @@ function createBot() {
     botReady = true;
 
     setTimeout(() => {
-      // Interact with the compass after spawning
       const compass = bot.inventory.items().find((item) => item.name.includes("compass"));
       if (compass) {
         console.log("Compass found! Opening it...");
-        bot.activateItem(); // Simulates right-clicking the compass to open the GUI
+        bot.activateItem();
       } else {
         console.log("Compass not found in inventory.");
       }
@@ -42,32 +40,40 @@ function createBot() {
 
   bot.on("windowOpen", (window) => {
     console.log("GUI opened!");
-
-    // Check all slots in the GUI
     window.slots.forEach((item, index) => {
       if (item) {
         console.log(`Slot ${index}: ${item.displayName}`);
       }
     });
 
-    // Find the slot with "Lifesteal Realm"
     const lifestealSlot = window.slots.findIndex(
       (item) => item && item.displayName.includes("Purple Dye")
     );
     if (lifestealSlot !== -1) {
       console.log(`Lifesteal Realm found in slot ${lifestealSlot}`);
-      bot.clickWindow(lifestealSlot, 0, 0); // Click on the "Lifesteal Realm" slot
+      bot.clickWindow(lifestealSlot, 0, 0);
     } else {
       console.log("Lifesteal Realm not found in any slot!");
     }
   });
 
+  setInterval(() => {
+    bot.swingArm("right");
+    console.log("Swinging the sword...");
+  }, 1000); // Swing the sword every second
+
   bot.on("chat", (username, message) => {
     console.log(`[${username}] ${message}`);
   });
 
-  bot.on("kicked", console.log);
-  bot.on("error", console.log);
+  bot.on("kicked", (reason) => {
+    console.log("Bot was kicked: ", reason);
+  });
+
+  bot.on("error", (err) => {
+    console.error("Bot encountered an error: ", err);
+  });
+
   bot.on("end", () => {
     console.log("Bot disconnected. Restarting...");
     createBot(); // Restart the bot if it disconnects
@@ -80,7 +86,6 @@ function createBot() {
 
   rl.on("line", (input) => {
     if (input.trim()) {
-      console.log(`Attempting to send message: ${input}`);
       if (botReady) {
         try {
           bot.chat(input);
