@@ -1,5 +1,3 @@
-const express = require("express");
-const http = require("http");
 const mineflayer = require("mineflayer");
 const readline = require("readline");
 const pvp = require("mineflayer-pvp").plugin;
@@ -7,25 +5,11 @@ const { pathfinder } = require("mineflayer-pathfinder");
 const armorManager = require("mineflayer-armor-manager");
 const AutoAuth = require("mineflayer-auto-auth");
 
-const app = express();
-
-// Set up express app to keep the bot alive in the cloud
-app.use(express.json());
-app.get("/", (_, res) => res.send("Bot is running")); // Simple text response
-app.listen(process.env.PORT || 1500, () => {
-  console.log("Server is running on port " + (process.env.PORT || 3000));
-});
-
-// Ensure Replit stays alive by pinging the server every 5 minutes
-setInterval(() => {
-  http.get(`http://localhost:${process.env.PORT || 3000}/`);
-}, 300000); // Every 5 minutes (300000 ms)
-
 // Bot creation function
 function createBot() {
   const bot = mineflayer.createBot({
     host: "play.potionmc.xyz",
-   version: false,
+    version: false,
     username: "DgytonTop",
     port: 25565,
     plugins: [AutoAuth],
