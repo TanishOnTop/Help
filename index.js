@@ -10,11 +10,11 @@ function createBot() {
   const bot = mineflayer.createBot({
     host: "play.potionmc.xyz",
     version: false,
-    username: "fireball_022",
+    username: "ParkourNinja34",
     port: 25565,
     plugins: [AutoAuth],
     AutoAuth: {
-      password: "Yourgifttanish", // Set the password here
+      password: "553532", // Set the password here
     },
   });
 
