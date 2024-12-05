@@ -1,7 +1,7 @@
 const mineflayer = require("mineflayer");
 const readline = require("readline");
 const pvp = require("mineflayer-pvp").plugin;
-const { pathfinder } = require("mineflayer-pathfinder");
+const { pathfinder, goals } = require("mineflayer-pathfinder");
 const armorManager = require("mineflayer-armor-manager");
 const AutoAuth = require("mineflayer-auto-auth");
 
@@ -62,50 +62,36 @@ function createBot() {
     }
   });
 
-  bot.on("windowClose", () => {
-    console.log("Window closed. Equipping sword...");
-
-    equipSword(); // Try equipping the sword immediately
-
-    // Set interval to retry equipping the sword every 1 minute if not found
+  // Function to attack Pigmen in front of the bot
+  function attackPigmenInFront() {
     setInterval(() => {
-      equipSword();
-    }, 60000); // 60 seconds
-  });
+      if (bot.entity && bot.entity.position) {
+        // Scan for entities in front of the bot
+        const target = bot.nearestEntity((entity) => {
+          // Check if the entity is in front of the bot (you can adjust this angle)
+          const angle = bot.entity.rotation.y;
+          const entityPosition = entity.position;
 
-  function equipSword() {
-    const sword = bot.inventory.items().find((item) => item.name.includes("sword"));
-    if (sword) {
-      bot.equip(sword, "hand").then(() => {
-        console.log("Sword equipped in main hand!");
+          // Check if the entity is within a 180-degree cone in front of the bot
+          const angleToEntity = Math.atan2(
+            entityPosition.x - bot.entity.position.x,
+            entityPosition.z - bot.entity.position.z
+          );
+          const diff = Math.abs(angle - angleToEntity);
 
-        // Start attacking nearby mobs
-        attackMobs();
-      }).catch((err) => {
-        console.log("Failed to equip sword: ", err);
-      });
-    } else {
-      console.log("No sword found in inventory. Will retry in 1 minute.");
-    }
-  }
+          // Only target Pigmen (Zombie Pigmen)
+          return (
+            diff < Math.PI / 4 && // 45-degree cone
+            (entity.type === "pig" || entity.type === "zombie_pigman") // Target only Pigmen
+          );
+        });
 
-  function attackMobs() {
-    const mob = bot.nearestEntity((entity) => entity.type === "mob");
-
-    if (mob) {
-      console.log(`Attacking mob: ${mob.name}`);
-
-      // Only attack without moving
-      bot.pvp.attack(mob, {
-        sprint: false, // Prevent the bot from sprinting
-        followRange: 0, // Disable chasing
-      });
-    } else {
-      console.log("No mobs nearby.");
-    }
-
-    // Re-check for mobs every 2 seconds
-    setTimeout(attackMobs, 2000);
+        if (target) {
+          console.log(`Found a Pigman in front, attacking ${target.displayName || target.username}`);
+          bot.attack(target);
+        }
+      }
+    }, 1000); // Check every 1 second
   }
 
   bot.on("chat", (username, message) => {
@@ -138,6 +124,11 @@ function createBot() {
         console.log("Bot not connected yet.");
       }
     }
+  });
+
+  // Start the attack loop when bot is ready
+  bot.on("spawn", () => {
+    attackPigmenInFront(); // Start attacking Pigmen in front
   });
 }
 
