@@ -10,11 +10,11 @@ function createBot() {
   const bot = mineflayer.createBot({
     host: "play.potionmc.xyz",
     version: false,
-    username: "ParkourNinja34",
+    username: "SB9_Gaming",
     port: 25565,
     plugins: [AutoAuth],
     AutoAuth: {
-      password: "553532", // Set the password here
+      password: "afkbot01", // Set the password here
     },
   });
 
@@ -94,7 +94,12 @@ function createBot() {
 
     if (mob) {
       console.log(`Attacking mob: ${mob.name}`);
-      bot.pvp.attack(mob);
+
+      // Only attack without moving
+      bot.pvp.attack(mob, {
+        sprint: false, // Prevent the bot from sprinting
+        followRange: 0, // Disable chasing
+      });
     } else {
       console.log("No mobs nearby.");
     }
